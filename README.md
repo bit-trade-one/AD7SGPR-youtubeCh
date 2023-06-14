@@ -1,20 +1,7 @@
-# ADXXXXX-Template
+# AD7SGPR YouTube登録者数取得App
+このアプリケーションはYouTubeチャンネルの登録者数を定期的に取得し、シリアル通信で送信することができます。
 
-![製品画像]()
-
-(製品説明後日記載)
-
-
-## [製品HPリンク](http://bit-trade-one.co.jp/) 
-
-### [マニュアル](https://github.com/bit-trade-one/-ADXXXXX-Template/raw/master/Manual)
-
-### [アプリケーションソフトウェア](https://github.com/bit-trade-one/-ADXXXXX-Template/raw/master/App/)  
-
-### [ファームウェア](https://github.com/bit-trade-one/-ADXXXXX-Template/raw/master/Firmware/)
-
-### [Q&A](FAQ.md)
-
-### [基板図](https://github.com/bit-trade-one/-ADXXXXX-Template/blob/master/Dimensions/-ADXXXXX-Template-Dimensions.pdf)
-
-### [回路図](https://github.com/bit-trade-one/-ADXXXXX-Templateo/blob/master/Schematics/-ADXXXXX-Template-Schematics.pdf)
+### 特徴
+YouTube APIを使用して指定したチャンネルの登録者数を取得します。
+取得した登録者数を指定した頻度で更新し、表示します。
+取得した登録者数をシリアル通信で送信することが可能です。
