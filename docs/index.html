@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube登録者数取得</title>
+  <style>
+    /* YouTube Theme Color */
+    .youtube-red {
+      background-color: #FF0000;
+      color: #FFFFFF;
+    }
+
+    .youtube-red:hover {
+      background-color: #CC0000;
+      color: #FFFFFF;
+    }
+
+    nav a {
+      color: #FF0000;
+    }
+
+    nav a:hover {
+      color: #CC0000;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>AD7SGPR YouTube登録者数取得App</h1>
+    <nav>
+      <a href="index.html">TOP</a>
+      <a href="10manual.html">How to use</a>
+      <a href="https://bit-trade-one.co.jp/">BTO HP</a>
+      <a href="https://github.com/bit-trade-one/AD7SGPR-youtubeCh">GitHub</a>
+    </nav>
+    <br>
+  </header>
+  <form id="youtube-form">
+    <label for="api-key">APIキー:</label>
+    <input type="text" id="api-key" required>
+    <br>
+    <label for="channel-id">チャンネルID:</label>
+    <input type="text" id="channel-id" required>
+    <br>
+    <label for="interval">取得頻度（秒）:</label>
+    <input type="number" id="interval" min="1" value="10" required>
+    <br>
+    <button type="submit" class="youtube-red">登録者数取得開始</button>
+  </form>
+  <h2 id="result">登録者数: -</h2>
+
+  <!-- シリアル通信用のUI -->
+  <button id="serial-connect-button" class="youtube-red" disabled>シリアル接続</button>
+
+  <br>
+  <textarea id="serial-output" rows="10" cols="50" readonly></textarea>
+
+  <script>
+    let port;
+    let reader;
+    let inputDone;
+    let outputDone;
+    let inputStream;
+    let outputStream;
+    const serialOutput = document.getElementById('serial-output');
+    // シリアル通信からの応答を表示
+    function onIncomingSerial(data) {
+      serialOutput.value += data.trim() + '\n';
+      serialOutput.scrollTop = serialOutput.scrollHeight; // 自動スクロール
+    }
+    let currentSubscriberCount = '-';
+
+    async function connect() {
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    const encoder = new TextEncoderStream();
+    outputDone = encoder.readable.pipeTo(port.writable);
+    outputStream = encoder.writable;
+    let decoder = new TextDecoderStream();
+    inputDone = port.readable.pipeTo(decoder.writable);
+    inputStream = decoder.readable;
+    reader = inputStream.getReader();
+    readLoop();
+    // Connectした直後に現在の登録者数を送信
+    await sendSubscriberCount(currentSubscriberCount);
+  } catch (error) {
+    console.error("Error connecting to serial port: ", error);
+  }
+}
+
+async function disconnect() {
+  try {
+    if (reader) {
+      await reader.cancel();
+      await inputDone.catch(() => { });
+      reader = null;
+      inputDone = null;
+    }
+    if (outputStream) {
+      await outputStream.getWriter().close();
+      await outputDone;
+      outputStream = null;
+      outputDone = null;
+    }
+    await port.close();
+    port = null;
+  } catch (error) {
+    console.error("Error disconnecting from serial port: ", error);
+  }
+}
+
+async function readLoop() {
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (value) {
+        serialOutput.value += value;
+        // テキストボックスを自動スクロール
+        serialOutput.scrollTop = serialOutput.scrollHeight;
+      }
+      if (done) {
+        serialOutput.textContent += '[シリアル接続が切断されました]\n';
+        await disconnect();
+        return;
+      }
+    }
+  } catch (error) {
+    console.error("Error reading from serial port: ", error);
+  }
+}
+
+async function sendText(text) {
+  try {
+    const writer = outputStream.getWriter();
+    writer.write(text);
+    writer.releaseLock();
+  } catch (error) {
+    console.error("Error writing to serial port: ", error);
+  }
+}
+
+async function sendSubscriberCount(count) {
+  try {
+    await sendText(`${count}\r\n`);
+  } catch (error) {
+    console.error("Error sending subscriber count to serial port: ", error);
+  }
+}
+
+    document.getElementById('youtube-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const apiKey = document.getElementById('api-key').value;
+      const channelId = document.getElementById('channel-id').value;
+      const interval = document.getElementById('interval').value;
+
+      currentSubscriberCount = await getSubscriberCount(apiKey, channelId);
+      document.getElementById('result').textContent = `登録者数: ${currentSubscriberCount}`;
+
+      if (port) {
+        await sendSubscriberCount(currentSubscriberCount);
+      }
+
+      setInterval(async () => {
+        currentSubscriberCount = await getSubscriberCount(apiKey, channelId);
+        document.getElementById('result').textContent = `登録者数: ${currentSubscriberCount}`;
+        if (port) {
+          await sendSubscriberCount(currentSubscriberCount);
+        }
+      }, interval * 1000);
+
+      document.getElementById('serial-connect-button').disabled = false;
+    });
+
+    async function getSubscriberCount(apiKey, channelId) {
+      const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelId}&key=${apiKey}`;
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.items && data.items.length > 0) {
+          const subscriberCount = data.items[0].statistics.subscriberCount;
+          return subscriberCount;
+        } else {
+          console.log('チャンネルが見つかりませんでした。');
+          return '-';
+        }
+      } catch (error) {
+        console.error('エラーが発生しました: ', error);
+        return '-';
+      }
+    }
+
+    document.getElementById('serial-connect-button').addEventListener('click', async () => {
+      if (!port) {
+        await connect();
+      } else {
+        await disconnect();
+      }
+    });
+  </script>
+</body>
+
+</html>
