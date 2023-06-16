@@ -37,6 +37,115 @@
       <a href="https://github.com/bit-trade-one/AD7SGPR-youtubeCh">GitHub</a>
     </nav>
     <br>
-  </header>
-  <h1>使い方ページ(工事中)</h1>
-<body></body>
+  </header><hr>
+
+  <details>
+    <summary>APIキーの取得方法</summary>
+    <p>
+      1. <strong>Google Cloud Consoleにログインします</strong><br>
+      <a href="https://console.cloud.google.com/">https://console.cloud.google.com/</a> にアクセスしてGoogleアカウントでログインします。<br>
+      <br>
+      <img src="https://github.com/bit-trade-one/AD7SGPR-youtubeCh/assets/85532743/e12b2460-4fdf-48ed-879e-0d4910d7e558"
+        alt="Google Cloud Console Login" width="680"><br><br>
+    </p>
+
+    <p>
+      2. <strong>プロジェクトを選択または作成します</strong><br>
+      上部のプロジェクトドロップダウンから新しいプロジェクトを作成します。<br>
+      <img src="https://github.com/bit-trade-one/AD7SGPR-youtubeCh/assets/85532743/f0ebaef8-df64-4b9a-a3be-26c05d1e4968"
+        alt="Project Selection" width="680">
+      <img src="https://github.com/bit-trade-one/AD7SGPR-youtubeCh/assets/85532743/1620dfe2-abe7-4e29-84c4-301045ccaaca"
+        alt="Project Selection" width="680">
+      <br><br>
+    </p>
+
+    <p>
+      3. <strong>ナビゲーションメニューを開き、「APIとサービス」を選択します</strong><br>
+      左上のナビゲーションメニュー（三本線アイコン）をクリックして、「APIとサービス」を選択します。<br>
+      その後、ドロップダウンから「ライブラリ」をクリックします。<br>
+      <img src="https://github.com/bit-trade-one/AD7SGPR-youtubeCh/assets/85532743/9504d650-ab32-4c33-9a0d-4d7a8907c305"
+        alt="Navigation Menu" width="680"><br><br>
+    </p>
+
+    <p>
+      4. <strong>YouTube Data API v3を探して有効にします</strong><br>
+      APIライブラリで「YouTube Data API v3」を検索し、そのページに移動します。<br>ページにある「有効にする」ボタンをクリックします。<br>
+      <img src="https://github.com/bit-trade-one/AD7SGPR-youtubeCh/assets/85532743/951bc4e7-2d3d-4d20-80e6-c7490b5758e6"
+        alt="YouTube Data API" width="680">
+      <img src="https://github.com/bit-trade-one/AD7SGPR-youtubeCh/assets/85532743/a56d3f71-5be3-4f92-93fe-60029fc625b4"
+        alt="YouTube Data API2" width="680">
+      <img src="https://github.com/bit-trade-one/AD7SGPR-youtubeCh/assets/85532743/cb8f4fce-3dae-43c2-9bb4-ab7e4a1137c4"
+        alt="YouTube Data API3" width="680">
+      <br><br>
+    </p>
+
+    <p>
+      5. <strong>認証情報を作成します</strong><br>
+      APIを有効にした後、左側のメニューから「認証情報」を選択します。<br>次に「認証情報を作成」をクリックし、「APIキー」を選択します。<br>
+      <img src="https://github.com/bit-trade-one/AD7SGPR-youtubeCh/assets/85532743/d2eff24e-2732-4457-8c2c-c08f3bb94ba2"
+        alt="Credentials Creation">
+    </p>
+
+    <p>
+      6. <strong>APIキーを取得します</strong><br>
+      新しいキーを生成したら、そのキーをコピーして安全な場所に保存します。<br>このキーがYouTube Data APIの認証情報となります。<br>
+      ※画像下段に書いてある通り制限を設けることをおすすめします。同画面リンクをご確認ください。<br>
+      <img src="https://github.com/bit-trade-one/AD7SGPR-youtubeCh/assets/85532743/b3d9dc5b-9d8f-4de7-9450-82b20434ec49"
+        alt="API Key">
+    </p>
+  </details>
+  <hr>
+  <h1>本アプリの使用方法</h1>
+
+
+  <fieldset>
+
+
+    <section>
+      <h3>App画像</h3>
+      <img src="https://github.com/bit-trade-one/AD7SGPR-youtubeCh/assets/85532743/7c17505c-9e25-4f56-a8ea-042693c0d7c9"
+        alt="App画像">
+    </section>
+  </fieldset>
+
+  <section>
+    <h2>1. APIキーの入力</h2>
+
+    <p>YouTube Data API V3から取得したAPIキーを「APIキー:」フィールドに入力します。<br><br></p>
+  </section>
+
+
+
+  <section>
+    <h2>2. チャンネルIDの入力</h2>
+
+    <p>登録者数を知りたいYouTubeチャンネルのURLまたはIDを「チャンネルURLorID:」フィールドに入力します。<br><br></p>
+  </section>
+
+  <section>
+    <h2>3. 取得頻度の設定</h2>
+
+    <p>「取得頻度（秒）:」フィールドに、何秒ごとに新しい登録者数を取得するかを入力します。デフォルトは10秒です。<br><br></p>
+  </section>
+
+  <section>
+    <h2>4. 登録者数取得開始</h2>
+
+    <p>すべてのフィールドが適切に入力されたら、「登録者数取得開始」ボタンをクリックします。すると、アプリケーションは指定した頻度でYouTubeチャンネルの登録者数を取得し、
+      「登録者数:」の横に表示します。<br><br></p>
+  </section>
+
+  <section>
+    <h2>5. シリアル接続</h2>
+
+    <p>
+      取得した登録者数をシリアルデバイスに送信することも可能です。そのためには、「シリアル接続」ボタンをクリックします。シリアルデバイスとの接続が成功すると、「シリアル接続」ボタンを再度クリックすることで接続を解除することができます。
+      <br><br></p>
+  </section>
+
+  <p>注意：YouTubeAPIの使用制限により、取得頻度が高すぎると一時的にデータの取得ができなくなる可能性があります。</p>
+
+  <footer>
+    <p>Copyright © 2023 Bit Trade One, LTD. All rights reserved.</p>
+  </footer>
+</body>

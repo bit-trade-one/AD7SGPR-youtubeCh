@@ -36,13 +36,14 @@
       <a href="https://bit-trade-one.co.jp/">BTO HP</a>
       <a href="https://github.com/bit-trade-one/AD7SGPR-youtubeCh">GitHub</a>
     </nav>
+    <p>※YoutubeAPIの仕様で値が丸められます。<br>また、取得頻度が高いとAPIの使用制限が掛かる可能性があります。</p>
     <br>
   </header>
   <form id="youtube-form">
     <label for="api-key">APIキー:</label>
     <input type="text" id="api-key" required>
     <br>
-    <label for="channel-id">チャンネルID:</label>
+    <label for="channel-id">チャンネルURLorID:</label>
     <input type="text" id="channel-id" required>
     <br>
     <label for="interval">取得頻度（秒）:</label>
@@ -58,6 +59,11 @@
   <br>
   <textarea id="serial-output" rows="10" cols="50" readonly></textarea>
 
+  <footer>
+    <p>Copyright © 2023 Bit Trade One, LTD. All rights reserved.</p>
+  </footer>
+
+
   <script>
     let port;
     let reader;
@@ -65,6 +71,7 @@
     let outputDone;
     let inputStream;
     let outputStream;
+    let intervalId = null;
     const serialOutput = document.getElementById('serial-output');
     // シリアル通信からの応答を表示
     function onIncomingSerial(data) {
@@ -74,106 +81,93 @@
     let currentSubscriberCount = '-';
 
     async function connect() {
-  try {
-    port = await navigator.serial.requestPort();
-    await port.open({ baudRate: 115200 });
-    const encoder = new TextEncoderStream();
-    outputDone = encoder.readable.pipeTo(port.writable);
-    outputStream = encoder.writable;
-    let decoder = new TextDecoderStream();
-    inputDone = port.readable.pipeTo(decoder.writable);
-    inputStream = decoder.readable;
-    reader = inputStream.getReader();
-    readLoop();
-    // Connectした直後に現在の登録者数を送信
-    await sendSubscriberCount(currentSubscriberCount);
-  } catch (error) {
-    console.error("Error connecting to serial port: ", error);
-  }
-}
-
-async function disconnect() {
-  try {
-    if (reader) {
-      await reader.cancel();
-      await inputDone.catch(() => { });
-      reader = null;
-      inputDone = null;
-    }
-    if (outputStream) {
-      await outputStream.getWriter().close();
-      await outputDone;
-      outputStream = null;
-      outputDone = null;
-    }
-    await port.close();
-    port = null;
-  } catch (error) {
-    console.error("Error disconnecting from serial port: ", error);
-  }
-}
-
-async function readLoop() {
-  try {
-    while (true) {
-      const { value, done } = await reader.read();
-      if (value) {
-        serialOutput.value += value;
-        // テキストボックスを自動スクロール
-        serialOutput.scrollTop = serialOutput.scrollHeight;
-      }
-      if (done) {
-        serialOutput.textContent += '[シリアル接続が切断されました]\n';
-        await disconnect();
-        return;
-      }
-    }
-  } catch (error) {
-    console.error("Error reading from serial port: ", error);
-  }
-}
-
-async function sendText(text) {
-  try {
-    const writer = outputStream.getWriter();
-    writer.write(text);
-    writer.releaseLock();
-  } catch (error) {
-    console.error("Error writing to serial port: ", error);
-  }
-}
-
-async function sendSubscriberCount(count) {
-  try {
-    await sendText(`${count}\r\n`);
-  } catch (error) {
-    console.error("Error sending subscriber count to serial port: ", error);
-  }
-}
-
-    document.getElementById('youtube-form').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const apiKey = document.getElementById('api-key').value;
-      const channelId = document.getElementById('channel-id').value;
-      const interval = document.getElementById('interval').value;
-
-      currentSubscriberCount = await getSubscriberCount(apiKey, channelId);
-      document.getElementById('result').textContent = `登録者数: ${currentSubscriberCount}`;
-
-      if (port) {
+      try {
+        port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+        const encoder = new TextEncoderStream();
+        outputDone = encoder.readable.pipeTo(port.writable);
+        outputStream = encoder.writable;
+        let decoder = new TextDecoderStream();
+        inputDone = port.readable.pipeTo(decoder.writable);
+        inputStream = decoder.readable;
+        reader = inputStream.getReader();
+        readLoop();
+        // Connectした直後に現在の登録者数を送信
         await sendSubscriberCount(currentSubscriberCount);
+      } catch (error) {
+        console.error("Error connecting to serial port: ", error); F
       }
+    }
 
-      setInterval(async () => {
-        currentSubscriberCount = await getSubscriberCount(apiKey, channelId);
-        document.getElementById('result').textContent = `登録者数: ${currentSubscriberCount}`;
-        if (port) {
-          await sendSubscriberCount(currentSubscriberCount);
+    async function disconnect() {
+      try {
+        if (reader) {
+          await reader.cancel();
+          await inputDone.catch(() => { });
+          reader = null;
+          inputDone = null;
         }
-      }, interval * 1000);
+        if (outputStream) {
+          await outputStream.getWriter().close();
+          await outputDone;
+          outputStream = null;
+          outputDone = null;
+        }
+        await port.close();
+        port = null;
+      } catch (error) {
+        console.error("Error disconnecting from serial port: ", error);
+      }
+    }
 
-      document.getElementById('serial-connect-button').disabled = false;
-    });
+    async function readLoop() {
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (value) {
+            serialOutput.value += value;
+            // テキストボックスを自動スクロール
+            serialOutput.scrollTop = serialOutput.scrollHeight;
+          }
+          if (done) {
+            serialOutput.textContent += '[シリアル接続が切断されました]\n';
+            await disconnect();
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Error reading from serial port: ", error);
+      }
+    }
+
+    async function sendText(text) {
+      try {
+        const writer = outputStream.getWriter();
+        writer.write(text);
+        writer.releaseLock();
+      } catch (error) {
+        console.error("Error writing to serial port: ", error);
+      }
+    }
+
+    async function sendSubscriberCount(count) {
+      try {
+        await sendText(`${count}\r\n`);
+      } catch (error) {
+        console.error("Error sending subscriber count to serial port: ", error);
+      }
+    }
+
+    async function getChannelIdFromUrl(apiKey, url) {
+      const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(url)}&key=${apiKey}`);
+      const data = await response.json();
+      if (data.items && data.items.length > 0) {
+        return data.items[0].id.channelId;
+      } else {
+        console.error('No channel found for the given URL.');
+        return null;
+      }
+    }
 
     async function getSubscriberCount(apiKey, channelId) {
       const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelId}&key=${apiKey}`;
@@ -192,6 +186,72 @@ async function sendSubscriberCount(count) {
         return '-';
       }
     }
+
+    async function getSubscriberCountWithRetry(apiKey, channelId, retryInterval = 10000, maxRetries = 5) {
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          const count = await getSubscriberCount(apiKey, channelId);
+          console.log(`Subscriber count: ${count}`);
+          return count;
+        } catch (error) {
+          console.error(`Failed to get subscriber count: ${error}`);
+          if (i < maxRetries - 1) {  // If this is not the last retry...
+            console.log(`Waiting for ${retryInterval / 1000} seconds before retrying...`);
+            await new Promise(resolve => setTimeout(resolve, retryInterval));
+
+          }
+        }
+        console.error(`Failed to get subscriber count after ${maxRetries} retries.`);
+        return '-';
+      }
+    }
+
+    document.getElementById('youtube-form').addEventListener('submit', async function (event) {
+      event.preventDefault();
+      //以前の setInterval 関数が存在する場合はクリアします。
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+      }
+      const apiKey = document.getElementById('api-key').value;
+      let channelId = document.getElementById('channel-id').value;
+      const interval = document.getElementById('interval').value;
+
+      // 入力フィールドと送信ボタンを無効にする
+      document.getElementById('api-key').disabled = true;
+      document.getElementById('channel-id').disabled = true;
+      document.getElementById('interval').disabled = true;
+      document.getElementById('youtube-form').querySelector('button[type="submit"]').disabled = true;
+
+      // チャンネルIDがURL形式の場合、IDを抽出します
+      if (channelId.includes('http')) {
+        channelId = await getChannelIdFromUrl(apiKey, channelId);
+        if (!channelId) {
+          console.error('Failed to get channel ID from URL.');
+          return;
+        }
+      }
+
+      // Clear the display before sending a new request
+      document.getElementById('result').textContent = `登録者数: -`;
+
+      currentSubscriberCount = await getSubscriberCountWithRetry(apiKey, channelId);
+      document.getElementById('result').textContent = `登録者数: ${currentSubscriberCount}`;
+
+      if (port) {
+        await sendSubscriberCount(currentSubscriberCount);
+      }
+
+      setInterval(async () => {
+        currentSubscriberCount = await getSubscriberCountWithRetry(apiKey, channelId);
+        document.getElementById('result').textContent = `登録者数: ${currentSubscriberCount}`;
+        if (port) {
+          await sendSubscriberCount(currentSubscriberCount);
+        }
+      }, interval * 1000);
+
+      document.getElementById('serial-connect-button').disabled = false;
+    });
+
 
     document.getElementById('serial-connect-button').addEventListener('click', async () => {
       if (!port) {
