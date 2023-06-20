@@ -1,0 +1,7 @@
+・Web Serial API https://github.com/WICG/serial
+ライセンス W3C
+URL:https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document
+
+・Web Streams API https://www.w3.org/TR/streams-api/
+ライセンス W3C https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document
+URL:https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document
