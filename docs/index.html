@@ -153,7 +153,16 @@
 
     async function sendSubscriberCount(count) {
       try {
-        await sendText(`${count}\r\n`);
+        // countが文字列であればそのまま使用し、数値であれば文字列に変換
+        let countString = typeof count === 'string' ? count : count.toString();
+
+        // 小数点を含むかどうかチェック
+        const decimalLength = countString.includes('.') ? 1 : 0;
+
+        // padStartメソッドを用いて、文字列が(8 + 小数点の長さ)文字になるまで左側に空白を追加
+        countString = countString.padStart(8 + decimalLength, ' ');
+
+        await sendText(`${countString}\r\n`);
       } catch (error) {
         console.error("Error sending subscriber count to serial port: ", error);
       }
